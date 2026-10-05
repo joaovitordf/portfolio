@@ -1,4 +1,4 @@
-export const AUTHORIZED_ADMIN_USER_ID = '21fbb14d-8e11-4166-b320-639d8a7cb4df';
+export const AUTHORIZED_ADMIN_USER_ID = 'c50fb5e1-4978-4d35-a08d-08d93abfe38a';
 
 export type AdminAuthErrorCode = 'invalid-credentials' | 'unauthorized' | 'unavailable';
 

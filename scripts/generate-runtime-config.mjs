@@ -1,4 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+try {
+  process.loadEnvFile?.();
+} catch {
+  // .env is optional; continue if not present
+}
 
 const outputPath = new URL('../public/runtime-config.js', import.meta.url);
 const url = process.env.SUPABASE_URL ?? '';

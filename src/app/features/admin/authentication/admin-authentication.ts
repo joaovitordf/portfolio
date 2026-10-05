@@ -41,12 +41,14 @@ export class AdminAuthentication {
       return;
     }
 
+    await this.router.navigateByUrl('/', { skipLocationChange: true });
     await this.router.navigate(['/admin']);
   }
 
   private async restoreSession(): Promise<void> {
     if (await this.auth.restoreAuthorizedSession()) {
-      await this.router.navigate(['/admin', 'area']);
+      await this.router.navigateByUrl('/', { skipLocationChange: true });
+      await this.router.navigate(['/admin']);
     }
   }
 

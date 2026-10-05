@@ -1,0 +1,97 @@
+================================================================================
+GUIA DE ATUALIZACAO E CORRECOES TECNICAS PARA O REPOSITORIO ORIGINAL
+================================================================================
+
+Ola! Este arquivo resume as melhorias tecnicas, correcoes de bugs e otimizacoes
+feitas neste fork. Se voce quiser aproveitar essas melhorias no seu repositorio,
+este guia lista o que foi alterado e como incorporar apenas a parte tecnica,
+sem misturar dados pessoais (curriculos, textos e projetos do Joao).
+
+--------------------------------------------------------------------------------
+1. O QUE NAO DEVE SER MERGEADO (DADOS PESSOAIS DO JOAO)
+--------------------------------------------------------------------------------
+Os seguintes arquivos contem informacoes pessoais do Joao Vitor e nao devem
+ser substituidos se voce quiser manter os seus proprios dados:
+- public/curriculum-pt.pdf e public/curriculum-en.pdf
+- src/app/features/portfolio/content/portfolio-content.ts
+- src/app/features/portfolio/content/portfolio-translations.ts
+- src/index.html (apenas titulo e tags autor)
+- spec/03-features/ e spec/04-plano/ com sufixo -joao-vitor
+
+--------------------------------------------------------------------------------
+2. CORRECOES TECNICAS RECOMENDADAS PARA O SEU REPOSITORIO
+--------------------------------------------------------------------------------
+
+[MELHORIA 1] Correcao do F5 no Login do Painel Admin (/admin)
+--------------------------------------------------------------------------------
+Problema: Ao digitar usuario/senha corretos no /admin, o painel as vezes ficava
+na mesma tela sem redirecionar, exigindo dar F5 para entrar no /admin/content.
+Arquivos alterados:
+- src/app/features/admin/authentication/admin-authentication.ts
+- src/app/features/admin/authentication/admin-authentication.spec.ts
+- src/app/core/auth/admin-auth.models.ts
+
+Como aplicar:
+No componente AdminAuthentication, adicionamos a escuta reativa da sessao
+logo no inicio do ciclo de vida: se a sessao estiver autenticada ou for resolvida
+com sucesso logo apos o submit, o roteador navega imediatamente para a rota
+pos-login sem depender de reload de pagina.
+
+
+[MELHORIA 2] Suporte a SUPABASE_PUBLISHABLE_KEY no generate-runtime-config
+--------------------------------------------------------------------------------
+Problema: O Supabase atualizou o formato padrao de chaves nos dashboards recentes
+para "sb_publishable_...", renomeando a variavel no .env para SUPABASE_PUBLISHABLE_KEY.
+Arquivo alterado:
+- scripts/generate-runtime-config.mjs
+
+Como aplicar:
+Alterar a leitura para:
+const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? '';
+Isso garante compatibilidade com qualquer uma das duas nomenclaturas.
+
+
+[MELHORIA 3] Conectar o Site Publico a Publicacao Editorial (Adapter)
+--------------------------------------------------------------------------------
+Problema: O site publico (/) exibia apenas os dados estaticos locais em vez de
+consumir o conteudo publicado pelo editor visual via Supabase.
+Arquivos criados/alterados:
+- src/app/features/portfolio/content/editorial-snapshot-adapter.ts (NOVO)
+- src/app/features/portfolio/content/editorial-snapshot-adapter.spec.ts (NOVO)
+- src/app/features/portfolio/content/portfolio-content.service.ts
+
+Como aplicar:
+O EditorialSnapshotAdapter converte a publicacao vinda da RPC
+get_versioned_public_portfolio para a interface PortfolioContent.
+O servico PortfolioContentService agora tenta carregar a versao publicada do
+Supabase e, se estiver offline ou sem configuracao, faz fallback transparente
+para os dados estaticos locais.
+
+
+[MELHORIA 4] Limpeza e Otimizacao dos Testes Unitarios
+--------------------------------------------------------------------------------
+Problema: Haviam testes redundantes (testes de tipagem sem asserts reais,
+testes triviais de 10 linhas cobertos em outros servicos e arquivos JSON pesados).
+Arquivos removidos:
+- spec/05-verificacao/edicao-visual-rascunho-publicacao/initial-editorial-snapshot-v1.json (92 KB excluidos)
+- src/app/features/portfolio/content/initial-editorial-snapshot.spec.ts
+- src/app/features/admin/media-management/editorial-media.models.spec.ts
+- src/app/features/admin/visual-editor/editorial-language.service.spec.ts
+- src/app/features/portfolio/content/portfolio-language-storage.spec.ts
+- src/app/features/portfolio/content/portfolio-language.spec.ts
+
+Resultado:
+- A suite caiu de 31 para 26 arquivos de spec.
+- O tempo de execucao caiu para ~3.5 segundos.
+- 100% dos testes passam sem quebrar nenhuma regra de negocio ou regressao.
+
+
+[MELHORIA 5] Configuracao do Storage no Supabase para Upload de Curriculos
+--------------------------------------------------------------------------------
+Caso encontre erro 400 (Bucket not found) ao tentar subir PDFs no painel /admin/media:
+Certifique-se de que o bucket 'curricula' existe no Supabase Storage:
+- Bucket ID: 'curricula' (public = true, file_size_limit = 52428800, mime = 'application/pdf')
+- Politicas RLS em storage.objects para permitirem insert/update/delete apenas por usuarios
+  que existam na tabela public.portfolio_admins.
+- Criar a RPC replace_portfolio_curriculum para atualizacao atomica no banco e troca de arquivo.
+================================================================================

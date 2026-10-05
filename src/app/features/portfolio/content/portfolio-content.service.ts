@@ -1,6 +1,18 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from '../../../core/supabase/supabase-client';
+import { PublishedSnapshotService } from './published-snapshot.service';
+import type { EditorialSnapshotV1 } from './editorial-snapshot.models';
+import {
+  snapshotToAcademicEntries,
+  snapshotToContactLinks,
+  snapshotToCopy,
+  snapshotToCurriculum,
+  snapshotToExperiences,
+  snapshotToProjects,
+  snapshotToSectionOrder,
+  snapshotToSkillCategories,
+} from './editorial-snapshot-adapter';
 import {
   PORTFOLIO_ACADEMIC_ENTRIES,
   PORTFOLIO_CONTACT_LINKS,
@@ -26,6 +38,8 @@ type Row = Record<string, unknown>;
 @Injectable({ providedIn: 'root' })
 export class PortfolioContentService {
   private readonly client = inject(SUPABASE_CLIENT);
+  private readonly snapshotService = inject(PublishedSnapshotService, { optional: true });
+  private snapshotPromise: Promise<EditorialSnapshotV1 | null> | null = null;
 
   private readonly remoteCopyState = signal<Partial<PortfolioCopy>>({});
   private readonly errorState = signal<Error | null>(null);
@@ -34,9 +48,30 @@ export class PortfolioContentService {
   readonly lastError = computed(() => this.errorState());
   readonly isAvailable = computed(() => this.client !== null);
 
+  private readonly storageUrlResolver = (bucket: string, path: string): string => {
+    return this.client?.storage.from(bucket).getPublicUrl(path).data.publicUrl ?? path;
+  };
+
+  private async getSnapshot(): Promise<EditorialSnapshotV1 | null> {
+    if (!this.snapshotService) return null;
+    const existing = this.snapshotService.snapshot();
+    if (existing) return existing;
+    if (this.snapshotPromise) return this.snapshotPromise;
+    this.snapshotPromise = this.snapshotService.load().catch(() => null);
+    return this.snapshotPromise;
+  }
+
   async loadCopy(locale: PortfolioLocale): Promise<Partial<PortfolioCopy>> {
     this.remoteCopyState.set({});
     this.errorState.set(null);
+
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      const copy = snapshotToCopy(snapshot, locale);
+      this.remoteCopyState.set(copy);
+      return copy;
+    }
+
     if (!this.client) {
       return {};
     }
@@ -91,6 +126,11 @@ export class PortfolioContentService {
   }
 
   async listExperiences(locale: PortfolioLocale): Promise<PortfolioExperience[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      return snapshotToExperiences(snapshot, locale);
+    }
+
     if (!this.client) return [];
     const client = this.client;
 
@@ -143,6 +183,11 @@ export class PortfolioContentService {
   }
 
   async listProjects(locale: PortfolioLocale): Promise<PortfolioProject[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      return snapshotToProjects(snapshot, locale, this.storageUrlResolver);
+    }
+
     if (!this.client) return [];
     const client = this.client;
 
@@ -204,6 +249,12 @@ export class PortfolioContentService {
   }
 
   async getCurriculum(locale: PortfolioLocale): Promise<PortfolioFile | null> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      const curriculum = snapshotToCurriculum(snapshot, locale, this.storageUrlResolver);
+      if (curriculum) return curriculum;
+    }
+
     if (!this.client) return null;
     const client = this.client;
 
@@ -259,6 +310,12 @@ export class PortfolioContentService {
   }
 
   async listSkillCategories(locale: PortfolioLocale): Promise<PortfolioSkillCategory[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      const categories = snapshotToSkillCategories(snapshot, locale, this.storageUrlResolver);
+      if (categories.length > 0) return categories;
+    }
+
     if (!this.client) return fallbackSkillCategories();
     const client = this.client;
 
@@ -339,6 +396,12 @@ export class PortfolioContentService {
   }
 
   async listAcademicEntries(locale: PortfolioLocale): Promise<PortfolioAcademicEntry[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      const entries = snapshotToAcademicEntries(snapshot, locale);
+      if (entries.length > 0) return entries;
+    }
+
     if (!this.client) return fallbackAcademicEntries();
     const client = this.client;
 
@@ -384,6 +447,12 @@ export class PortfolioContentService {
   }
 
   async listContactLinks(locale: PortfolioLocale): Promise<PortfolioContactLink[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      const contacts = snapshotToContactLinks(snapshot, locale);
+      if (contacts.length > 0) return contacts;
+    }
+
     if (!this.client) return fallbackContactLinks();
     const client = this.client;
 
@@ -427,6 +496,23 @@ export class PortfolioContentService {
       this.errorState.set(toError(error));
       return fallbackContactLinks();
     }
+  }
+
+  async listSectionOrder(): Promise<string[]> {
+    const snapshot = await this.getSnapshot();
+    if (snapshot) {
+      return snapshotToSectionOrder(snapshot);
+    }
+    return [
+      'presentation-section',
+      'about-section',
+      'results-section',
+      'experiences-section',
+      'projects-section',
+      'skills-section',
+      'education-section',
+      'contact-section',
+    ];
   }
 
   private async getProjectTranslations(

@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from '../../../core/supabase/supabase-client';
 import { PortfolioContentService } from './portfolio-content.service';
+import { PublishedSnapshotService } from './published-snapshot.service';
+import snapshotJson from '../../../../../spec/05-verificacao/ativacao-painel-admin-joao-vitor/initial-editorial-snapshot-joao-v1.json';
 
 describe('PortfolioContentService', () => {
   it('loads the selected translation and keeps the content key', async () => {
@@ -369,6 +371,36 @@ describe('PortfolioContentService', () => {
     await expect(service.listContactLinks('en')).resolves.toMatchObject([
       { id: 'contact-1', label: 'GitHub', href: 'https://github.com/example', symbol: 'github' },
     ]);
+  });
+
+  it('loads copy, experiences, projects, and section order from PublishedSnapshotService when available', async () => {
+    const fakeSnapshotService = {
+      snapshot: () => null,
+      load: vi.fn(async () => snapshotJson),
+      clear: () => undefined,
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        PortfolioContentService,
+        { provide: SUPABASE_CLIENT, useValue: null },
+        { provide: PublishedSnapshotService, useValue: fakeSnapshotService },
+      ],
+    });
+    const service = TestBed.inject(PortfolioContentService);
+
+    const copy = await service.loadCopy('pt-BR');
+    expect(copy.aboutTitle).toBe('Sobre mim');
+
+    const experiences = await service.listExperiences('pt-BR');
+    expect(experiences.length).toBe(4);
+    expect(experiences[0]?.title).toBe('Desenvolvedor Front-end · SensorEng');
+
+    const projects = await service.listProjects('pt-BR');
+    expect(projects.length).toBe(2);
+
+    const sectionOrder = await service.listSectionOrder();
+    expect(sectionOrder).toContain('presentation-section');
   });
 });
 

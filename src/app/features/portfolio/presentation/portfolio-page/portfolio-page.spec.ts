@@ -132,23 +132,23 @@ describe('PortfolioPage', () => {
       element.querySelector('[data-testid="skills-languages-runtime"]')?.textContent,
     ).toContain('JavaScript');
     expect(element.querySelector('#formacao-academica')).toBeTruthy();
-    expect(element.querySelectorAll('.academic-card')).toHaveLength(3);
+    expect(element.querySelectorAll('.academic-card')).toHaveLength(1);
     expect(element.querySelector('#formacao-academica')?.textContent).toContain('Período');
-    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Python com Spark');
-    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Design Gráfico');
+    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Visão Computacional');
+    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Ciência da Computação');
     expect(element.querySelector('#contato')).toBeTruthy();
     expect([...element.querySelectorAll('section')].at(-1)?.id).toBe('contato');
     expect(
       (element.querySelector('[data-testid="contact-linkedin"]') as HTMLAnchorElement).href,
-    ).toBe('https://www.linkedin.com/in/marcos-santos-b9b544214/');
+    ).toBe('https://www.linkedin.com/in/xjoaovitordf/');
     expect(
       (element.querySelector('[data-testid="contact-github"]') as HTMLAnchorElement).href,
-    ).toBe('https://github.com/Marcos-Vinicius-F-Santos');
+    ).toBe('https://github.com/joaovitordf');
     expect((element.querySelector('[data-testid="contact-email"]') as HTMLAnchorElement).href).toBe(
-      'mailto:marcossantosjdev@gmail.com',
+      'mailto:profissional.joaovitordf@gmail.com',
     );
     expect((element.querySelector('[data-testid="contact-phone"]') as HTMLAnchorElement).href).toBe(
-      'tel:+5537998292763',
+      'tel:+553799429018',
     );
     expect(element.querySelector('[data-testid="contact-links"]')?.textContent).toContain(
       'LinkedIn',
@@ -174,7 +174,7 @@ describe('PortfolioPage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('#stack-tecnica h2')?.textContent).toContain('Skills');
-    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Data Science');
+    expect(element.querySelector('#formacao-academica')?.textContent).toContain('Computer Science');
     expect(
       (element.querySelector('[data-testid="contact-curriculum"]') as HTMLAnchorElement).href,
     ).toBe('https://storage.test/curriculum-en.pdf');
@@ -332,16 +332,16 @@ describe('PortfolioPage', () => {
     expect(element.querySelectorAll('.result-card')).toHaveLength(4);
     expect(
       element.querySelector('[data-testid="professional-result-time-reduction"]')?.textContent,
-    ).toContain('dias para horas');
+    ).toContain('85%');
     expect(
       element.querySelector('[data-testid="professional-result-steps-reduction"]')?.textContent,
-    ).toContain('8–10 para 3–5');
+    ).toContain('83,6%');
     expect(
       element.querySelector('[data-testid="professional-result-users-served"]')?.textContent,
-    ).toContain('2.000');
+    ).toContain('50');
     expect(
       element.querySelector('[data-testid="professional-result-productivity-gain"]')?.textContent,
-    ).toContain('50%');
+    ).toContain('60%');
   });
 
   it('renders only the approved professional results that are available', async () => {

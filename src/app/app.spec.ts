@@ -24,6 +24,6 @@ describe('App', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[data-testid="portfolio-page"]')).toBeTruthy();
-    expect(compiled.querySelector('h1')?.textContent).toContain('Marcos Santos');
+    expect(compiled.querySelector('h1')?.textContent).toContain('João Vitor Dias Fernandes');
   });
 });
