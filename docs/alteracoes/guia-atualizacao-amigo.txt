@@ -94,4 +94,13 @@ Certifique-se de que o bucket 'curricula' existe no Supabase Storage:
 - Politicas RLS em storage.objects para permitirem insert/update/delete apenas por usuarios
   que existam na tabela public.portfolio_admins.
 - Criar a RPC replace_portfolio_curriculum para atualizacao atomica no banco e troca de arquivo.
+
+--------------------------------------------------------------------------------
+[DICA DE COMPILACAO] Modificador 'override' no PublishedSnapshotContentService
+--------------------------------------------------------------------------------
+No arquivo src/app/features/portfolio/content/published-snapshot-content.service.ts
+linha 46, o metodo "async listSectionOrder()" sobrescreve o metodo da classe base.
+Para evitar o erro TS4114 quando a flag "noImplicitOverride" estiver ativada,
+adicione a palavra-chave "override":
+  override async listSectionOrder(): Promise<string[]> { ... }
 ================================================================================
