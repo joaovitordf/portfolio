@@ -43,15 +43,15 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
     return this.remoteCopy();
   }
 
-  async listSectionOrder(): Promise<string[]> {
+  override async listSectionOrder(): Promise<string[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listSectionOrder();
     return snapshot.sections.slice().sort((a, b) => a.position - b.position).map((section) => section.id);
   }
 
   override async listExperiences(locale: PortfolioLocale): Promise<PortfolioExperience[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listExperiences(locale);
     return this.entities(snapshot, 'experience').map(([id, entity]) => ({
       id,
       startDate: stringValue(entity.data['startDate']),
@@ -68,7 +68,7 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
 
   override async listProjects(locale: PortfolioLocale): Promise<PortfolioProject[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listProjects(locale);
     return this.entities(snapshot, 'project').map(([id, entity]) => {
       const technologyIds = Array.isArray(entity.data['technologyIds'])
         ? entity.data['technologyIds'].map(String)
@@ -97,12 +97,12 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
 
   override async getCurriculum(locale: PortfolioLocale): Promise<PortfolioFile | null> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return null;
+    if (!snapshot) return super.getCurriculum(locale);
     const [id, entity] = this.entities(snapshot, 'curriculum')[0] ?? [];
-    if (!id || !entity) return null;
+    if (!id || !entity) return super.getCurriculum(locale);
     const mediaId = stringValue(entity.data['mediaId']);
     const media = snapshot.media[mediaId];
-    if (!media?.assetPath || media.mime !== 'application/pdf') return null;
+    if (!media?.assetPath || media.mime !== 'application/pdf') return super.getCurriculum(locale);
     return {
       id,
       fileType: 'curriculum',
@@ -117,7 +117,7 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
 
   override async listSkillCategories(locale: PortfolioLocale): Promise<PortfolioSkillCategory[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listSkillCategories(locale);
     return this.entities(snapshot, 'skillCategory').map(([id, category]) => ({
       id,
       labelKey: '',
@@ -140,7 +140,7 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
 
   override async listAcademicEntries(locale: PortfolioLocale): Promise<PortfolioAcademicEntry[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listAcademicEntries(locale);
     return this.entities(snapshot, 'academic').map(([id, entity]) => ({
       id,
       nameKey: '',
@@ -158,7 +158,7 @@ export class PublishedSnapshotContentService extends PortfolioContentService {
 
   override async listContactLinks(locale: PortfolioLocale): Promise<PortfolioContactLink[]> {
     const snapshot = await this.loadSnapshot();
-    if (!snapshot) return [];
+    if (!snapshot) return super.listContactLinks(locale);
     return this.entities(snapshot, 'contact').flatMap(([id, entity]) => {
       const symbol = entity.data['symbol'];
       if (symbol !== 'linkedin' && symbol !== 'github' && symbol !== 'email' && symbol !== 'phone') return [];
