@@ -45,6 +45,41 @@ button:disabled {
   flex-basis: 100%;
   margin: 0;
 }
+.review-state--success {
+  color: #72d8b1;
+}
+.review-summary {
+  flex-basis: 100%;
+}
+.review-summary p {
+  margin: 0.25rem 0;
+}
+.review-blockers {
+  flex-basis: 100%;
+  display: grid;
+  gap: 0.5rem;
+}
+.review-blockers ol {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+.review-blockers li {
+  display: grid;
+  gap: 0.2rem;
+  max-width: 70rem;
+}
+.review-blockers strong {
+  color: #ffca7a;
+}
+.review-blockers code {
+  color: #f7f4e8;
+  font-size: 0.85em;
+}
+.review-blockers small {
+  color: #b8e8d3;
+}
 .action-error {
   color: #ff9d91;
 }

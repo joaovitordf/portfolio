@@ -20,8 +20,12 @@
       >
         Revisar alterações
       </button>
-      <button type="button" (click)="publish()" [disabled]="!validation()?.valid">
-        Publicar alterações</button
+      <button
+        type="button"
+        (click)="publish()"
+        [disabled]="!validation()?.valid || validation()?.revision !== autosave.confirmedRevision() || autosave.pendingCount() > 0 || !!autosave.failure() || publishing()"
+      >
+        {{ publishing() ? 'Publicando…' : 'Confirmar e publicar alterações' }}</button
       ><button type="button" (click)="exit()">Sair</button>
     </nav>
     @if (draftContent.draft(); as draft) {
@@ -35,13 +39,37 @@
       </div>
     }
     @if (validation(); as result) {
-      <p class="review-state">
-        {{
-          result.valid
-            ? 'Revisão pronta para confirmação.'
-            : result.errors.length + ' bloqueio(s) encontrado(s).'
-        }}
-      </p>
+      @if (result.valid) {
+        <div class="review-summary" data-testid="review-summary">
+          <p class="review-state review-state--success">Revisão pronta para confirmação.</p>
+          <p>
+            Resumo: {{ result.summary.changed }} alterado(s), {{ result.summary.translations }} tradução(ões),
+            {{ result.summary.added }} adicionado(s), {{ result.summary.removed }} removido(s),
+            {{ result.summary.reordered }} reordenado(s) e {{ result.summary.media }} mídia(s).
+          </p>
+          @if (result.revision !== autosave.confirmedRevision()) {
+            <p class="action-error" role="alert">
+              O rascunho mudou depois desta revisão. Clique em Revisar alterações novamente antes de publicar.
+            </p>
+          }
+        </div>
+      } @else {
+        <section class="review-blockers" role="alert" aria-labelledby="review-blockers-title" data-testid="review-blockers">
+          <p class="review-state" id="review-blockers-title">
+            {{ result.errors.length }} bloqueio(s) encontrado(s). Corrija os itens abaixo:
+          </p>
+          <ol>
+            @for (error of result.errors; track error.code + ':' + error.path) {
+              <li>
+                <strong>{{ reviewErrorTitle(error) }}</strong>
+                <span>{{ error.message }}</span>
+                <code>{{ reviewErrorLocation(error.path) }}</code>
+                <small>{{ reviewErrorGuidance(error) }}</small>
+              </li>
+            }
+          </ol>
+        </section>
+      }
     }
     @if (autosave.failure(); as failure) {
       <p class="action-error" role="alert">
